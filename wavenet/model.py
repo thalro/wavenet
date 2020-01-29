@@ -35,33 +35,34 @@ def WaveNetResidualConv1D(num_filters, kernel_size, dilation_rate):
     return build_residual_block
 
 
-def build_wavenet_model(input_size, num_filters, kernel_size,
-                        num_residual_blocks):
+def build_wavenet_model(num_stacks, num_filters,
+                        num_layers_per_stack = 9):
     """ Returns an implementation of WaveNet, as described in Section 2
         of the paper [1].
 
         Args:
-            input_size (int): The size of the waveform the network will
-                consider as input.
+            num_stacks: number of stacks of dilated convolutions
+            num_layers_per_stack: number of dilated convolutions per stack
             num_filters (int): Number of filters used for convolution.
-            kernel_size (int): The size of the convolution.
             num_residual_blocks (int): How many residual blocks to generate
                 between input and output. Residual block i will have a dilation
                 rate of 2^(i+1), i starting from zero.
 
         Returns:
-            A Keras model representing the WaveNet.
+            A Keras model representing the WaveNet., the recetive field size
 
         See:
             [1] Oord, Aaron van den, et al. "Wavenet: A generative model for
                 raw audio." arXiv preprint arXiv:1609.03499 (2016).
     """
-    l_input = Input(batch_shape=(None, input_size, 1))
+    kernel_size = 2
+    receptive_field_size = num_stacks*2**(num_layers_per_stack+1)
+    l_input = Input(batch_shape=(None, receptive_field_size, 1))
     l_stack_conv1d = Conv1D(num_filters, kernel_size, padding="causal")(l_input)
     l_skip_connections = []
-    for i in range(num_residual_blocks):
+    for i in range(num_stacks*num_layers_per_stack):
         l_stack_conv1d, l_skip_connection = WaveNetResidualConv1D(
-            num_filters, kernel_size, 2 ** (i + 1))(l_stack_conv1d)
+            num_filters, kernel_size, 2 ** ((i + 1)%(num_layers_per_stack+1)))(l_stack_conv1d)
         l_skip_connections.append(l_skip_connection)
     l_sum = Add()(l_skip_connections)
     relu = Activation("relu")(l_sum)
@@ -73,4 +74,4 @@ def build_wavenet_model(input_size, num_filters, kernel_size,
     model.compile(
         loss="categorical_crossentropy", optimizer="adam",
         metrics=["accuracy"])
-    return model
+    return model,receptive_field_size
