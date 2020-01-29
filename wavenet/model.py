@@ -57,7 +57,7 @@ def build_wavenet_model(input_size, num_filters, kernel_size,
                 raw audio." arXiv preprint arXiv:1609.03499 (2016).
     """
     l_input = Input(batch_shape=(None, input_size, 1))
-    l_stack_conv1d = Conv1D(num_filters, kernel_size, padding="same")(l_input)
+    l_stack_conv1d = Conv1D(num_filters, kernel_size, padding="causal")(l_input)
     l_skip_connections = []
     for i in range(num_residual_blocks):
         l_stack_conv1d, l_skip_connection = WaveNetResidualConv1D(
