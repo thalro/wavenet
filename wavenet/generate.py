@@ -1,5 +1,5 @@
 import numpy as np
-from keras.models import load_model
+from tensorflow.keras.models import load_model
 
 from wavenet.preprocess import prediction_to_waveform_value
 

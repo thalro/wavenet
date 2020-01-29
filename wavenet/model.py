@@ -1,6 +1,5 @@
-from keras.layers import (
-    Activation, Add, Conv1D, Dense, Flatten, Input, Multiply)
-from keras.models import Model
+from tensorflow.keras.layers import Activation, Add, Conv1D, Dense, Flatten, Input, Multiply
+from tensorflow.keras.models import Model
 
 
 def WaveNetResidualConv1D(num_filters, kernel_size, dilation_rate):
@@ -24,7 +23,7 @@ def WaveNetResidualConv1D(num_filters, kernel_size, dilation_rate):
         # Gated activation.
         l_sigmoid_conv1d = Conv1D(
             num_filters, kernel_size, dilation_rate=dilation_rate,
-            padding="same", activation="sigmoid")(l_input)
+            padding="causal", activation="sigmoid")(l_input)
         l_tanh_conv1d = Conv1D(
             num_filters, kernel_size, dilation_rate=dilation_rate,
             padding="same", activation="tanh")(l_input)
