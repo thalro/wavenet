@@ -77,7 +77,5 @@ def build_wavenet_model(num_stacks, num_filters,
     l_flatten = Flatten()(l2_conv1d)
     l_output = Dense(256, activation="softmax")(l_flatten)
     model = Model(inputs=[l_input], outputs=[l_output])
-    model.compile(
-        loss="categorical_crossentropy", optimizer="adam",
-        metrics=["accuracy"])
+    
     return model,receptive_field_size
