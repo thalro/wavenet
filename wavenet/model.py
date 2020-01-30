@@ -2,7 +2,7 @@ from tensorflow.keras.layers import Activation, Add, Conv1D, Dense, Flatten, Inp
 from tensorflow.keras.models import Model
 
 
-def WaveNetResidualConv1D(num_filters, kernel_size, dilation_rate):
+def WaveNetResidualConv1D(dilation_channels,skip_channels,residual_channels, kernel_size, dilation_rate):
     """ Function that creates a residual block for the WaveNet with gated
         activation units, skip connections and residual output, as described
         in Sections 2.3 and 2.4 of the paper [1].
@@ -22,22 +22,25 @@ def WaveNetResidualConv1D(num_filters, kernel_size, dilation_rate):
     def build_residual_block(l_input):
         # Gated activation.
         l_sigmoid_conv1d = Conv1D(
-            num_filters, kernel_size, dilation_rate=dilation_rate,
+            dilation_channels, kernel_size, dilation_rate=dilation_rate,
             padding="causal", activation="sigmoid")(l_input)
         l_tanh_conv1d = Conv1D(
-            num_filters, kernel_size, dilation_rate=dilation_rate,
+            dilation_channels, kernel_size, dilation_rate=dilation_rate,
             padding="same", activation="tanh")(l_input)
         l_mul = Multiply()([l_sigmoid_conv1d, l_tanh_conv1d])
         # Branches out to skip unit and residual output.
-        l_skip_connection = Conv1D(1, 1)(l_mul)
-        l_residual = Add()([l_input, l_skip_connection])
+        l_skip_connection = Conv1D(skip_channels, 1)(l_mul)
+        
+        l_residual = Add()([l_input, Conv1D(residual_channels,1)(l_mul)])
         return l_residual, l_skip_connection
+    
     return build_residual_block
 
 
-def build_wavenet_model(num_stacks, num_filters,
-                        num_layers_per_stack = 9,
-                        num_input_filters = 1):
+def build_wavenet_model(num_stacks, dilation_channels=32,
+                        skip_channels=64,
+                        residual_channels=32,
+                        num_layers_per_stack = 9):
     """ Returns an implementation of WaveNet, as described in Section 2
         of the paper [1].
 
@@ -59,13 +62,13 @@ def build_wavenet_model(num_stacks, num_filters,
     kernel_size = 2
     receptive_field_size = num_stacks*2**(num_layers_per_stack+1)
     l_input = Input(batch_shape=(None, receptive_field_size, 1))
-    l_stack_conv1d = Conv1D(num_input_filters, kernel_size, padding="causal")(l_input)
+    l_stack_conv1d = Conv1D(residual_channels, kernel_size, padding="causal")(l_input)
     l_skip_connections = []
     for i in range(num_stacks*num_layers_per_stack+num_stacks-1):
         dilution = 2 ** ((i + 1)%(num_layers_per_stack+1))
         l_stack_conv1d, l_skip_connection = WaveNetResidualConv1D(
-            num_filters, kernel_size, dilution)(l_stack_conv1d)
-        l_skip_connections.append(Conv1D(1, 1)(l_skip_connection))
+            dilation_channels,skip_channels,residual_channels, kernel_size, dilution)(l_stack_conv1d)
+        l_skip_connections.append(l_skip_connection)
     if len(l_skip_connections)>1:
     	l_sum = Add()(l_skip_connections)
     else:
