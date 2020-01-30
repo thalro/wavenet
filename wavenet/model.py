@@ -65,7 +65,7 @@ def build_wavenet_model(num_stacks, num_filters,
         l_stack_conv1d, l_skip_connection = WaveNetResidualConv1D(
             num_filters, kernel_size, dilution)(l_stack_conv1d)
         
-        l_skip_connections.append(l_skip_connection)
+        l_skip_connections.append(Conv1D(1, 1)(l_skip_connection))
     if len(l_skip_connections)>1:
     	l_sum = Add()(l_skip_connections)
     else:
