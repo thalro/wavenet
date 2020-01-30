@@ -62,12 +62,15 @@ def build_wavenet_model(num_stacks, num_filters,
     l_skip_connections = []
     for i in range(num_stacks*num_layers_per_stack+num_stacks-1):
         dilution = 2 ** ((i + 1)%(num_layers_per_stack+1))
-        print( dilution)
         l_stack_conv1d, l_skip_connection = WaveNetResidualConv1D(
             num_filters, kernel_size, dilution)(l_stack_conv1d)
         
         l_skip_connections.append(l_skip_connection)
-    l_sum = Add()(l_skip_connections)
+    if len(l_skip_connections)>1:
+    	l_sum = Add()(l_skip_connections)
+    else:
+        l_sum = l_skip_connections[0]
+
     relu = Activation("relu")(l_sum)
     l1_conv1d = Conv1D(1, 1, activation="relu")(relu)
     l2_conv1d = Conv1D(1, 1)(l1_conv1d)
