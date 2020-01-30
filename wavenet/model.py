@@ -75,8 +75,8 @@ def build_wavenet_model(num_stacks, dilation_channels=32,
         l_sum = l_skip_connections[0]
 
     relu = Activation("relu")(l_sum)
-    l1_conv1d = Conv1D(1, 1, activation="relu")(relu)
-    l2_conv1d = Conv1D(1, 1)(l1_conv1d)
+    l1_conv1d = Conv1D(skip_channels, 1, activation="relu")(relu)
+    l2_conv1d = Conv1D(skip_channels, 1)(l1_conv1d)
     l_flatten = Flatten()(l2_conv1d)
     l_output = Dense(256, activation="softmax")(l_flatten)
     model = Model(inputs=[l_input], outputs=[l_output])
