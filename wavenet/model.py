@@ -60,7 +60,7 @@ def build_wavenet_model(num_stacks, num_filters,
     l_input = Input(batch_shape=(None, receptive_field_size, 1))
     l_stack_conv1d = Conv1D(num_filters, kernel_size, padding="causal")(l_input)
     l_skip_connections = []
-    for i in range(num_stacks*num_layers_per_stack):
+    for i in range(num_stacks*num_layers_per_stack+num_stacks-1):
         dilution = 2 ** ((i + 1)%(num_layers_per_stack+1))
         print( dilution)
         l_stack_conv1d, l_skip_connection = WaveNetResidualConv1D(
