@@ -20,28 +20,28 @@ def read_audio(filename):
 # For scaling a given value x between the range [a, b].
 
 
-def scale_audio_uint8_to_float64(arr):
+def scale_audio_uint8_to_float32(arr):
     """ Scales an array of 8-bit unsigned integers [0-255] to [-1, 1].
     """
     vmax = np.iinfo(np.uint8).max
     vmin = np.iinfo(np.uint8).min
-    arr = arr.astype(np.float64)
+    arr = arr.astype(np.float32)
     return 2 * ((arr - vmin) / (vmax - vmin)) - 1
 
 
-def scale_audio_int16_to_float64(arr):
+def scale_audio_int16_to_float32(arr):
     """ Scales an array of 16-bit integers [-2^15, 2^15 - 1] to [-1, 1].
     """
     vmax = np.iinfo(np.int16).max
     vmin = np.iinfo(np.int16).min
-    arr = arr.astype(np.float64)
+    arr = arr.astype(np.float32)
     return 2 * ((arr - vmin) / (vmax - vmin)) - 1
 
 
-def scale_audio_float64_to_uint8(arr):
+def scale_audio_float_to_uint8(arr):
     """ Scales an array of float values between [-1, 1] to an 8-bit
         unsigned integer value [0, 255].
-        Inverse of `scale_audio_uint8_to_float64`.
+        Inverse of `scale_audio_uint8_to_float32`.
     """
     vmax = np.iinfo(np.uint8).max
     arr = ((arr + 1) / 2) * vmax
@@ -49,10 +49,10 @@ def scale_audio_float64_to_uint8(arr):
     return arr
 
 
-def scale_audio_float64_to_int16(arr):
+def scale_audio_float_to_int16(arr):
     """ Scales an array of float values between [-1, 1] to a 16-bit
         integer value [-2^15, 2^15 - 1].
-        Inverse of `scale_audio_int16_to_float64`.
+        Inverse of `scale_audio_int16_to_float32`.
     """
     vmax = np.iinfo(np.int16).max
     vmin = np.iinfo(np.int16).min
@@ -109,7 +109,7 @@ def get_audio_sample_batches(path_to_audio, receptive_field_size,
     for audio_file in audio_files:
         audio = read_audio(audio_file)
         # Scales audio from 16 bit int to (-1, 1).
-        audio = scale_audio_int16_to_float64(audio)
+        audio = scale_audio_int16_to_float32(audio)
         offset = 0
         while offset + receptive_field_size - 1 < len(audio):
             X.append(
@@ -119,7 +119,7 @@ def get_audio_sample_batches(path_to_audio, receptive_field_size,
             # For y apply mu-law, scale to 0-255 and make one-hot vector.
             y_cur = audio[receptive_field_size]
             y_cur = mu_law(y_cur)
-            y_cur = scale_audio_float64_to_uint8(y_cur)
+            y_cur = scale_audio_float_to_uint8(y_cur)
             y.append(to_one_hot(y_cur))
             offset += stride_step
     return np.array(X), np.array(y)
@@ -144,7 +144,7 @@ def prediction_to_waveform_value(probability_distribution, random=False):
     else:
         choice = np.argmax(probability_distribution)
     # Project the predicted [0, 255] integer value back to [-2^15, 2^15 - 1].
-    y_cur = scale_audio_uint8_to_float64(choice)
+    y_cur = scale_audio_uint8_to_float32(choice)
     y_cur = mu_law_inverse(y_cur)
-    y_cur = scale_audio_float64_to_int16(y_cur)
+    y_cur = scale_audio_float_to_int16(y_cur)
     return y_cur
