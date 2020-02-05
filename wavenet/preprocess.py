@@ -73,7 +73,7 @@ def mu_law(xt, mu=255):
     return np.sign(xt) * (np.log(1 + mu * np.absolute(xt)) / np.log(1 + mu))
 
 
-def mu_law_inverse(yt, mu=255):
+def mu_law_inverse(yt, mu=255.):
     """ The inverse transformation of mu-law that expands the input back to
         the original space.
     """
@@ -127,7 +127,7 @@ def get_audio_sample_batches(path_to_audio, receptive_field_size,
 
 def prediction_to_waveform_value(probability_distribution, random=False):
     """ Accepts the output of the WaveNet as input (a probability vector of
-        size 256) and outputs a 16-bit integer that that corresponds to the
+        size 256) and outputs a float that that corresponds to the
         position selected in the expanded space.
 
         Args:
@@ -144,7 +144,11 @@ def prediction_to_waveform_value(probability_distribution, random=False):
     else:
         choice = np.argmax(probability_distribution)
     # Project the predicted [0, 255] integer value back to [-2^15, 2^15 - 1].
+
     y_cur = scale_audio_uint8_to_float32(choice)
     y_cur = mu_law_inverse(y_cur)
-    y_cur = scale_audio_float_to_int16(y_cur)
+    
     return y_cur
+
+
+
