@@ -26,7 +26,7 @@ def WaveNetResidualConv1D(dilation_channels,skip_channels,residual_channels, ker
             padding="causal", activation="sigmoid")(l_input)
         l_tanh_conv1d = Conv1D(
             dilation_channels, kernel_size, dilation_rate=dilation_rate,
-            padding="same", activation="tanh")(l_input)
+            padding="causal", activation="tanh")(l_input)
         l_mul = Multiply()([l_sigmoid_conv1d, l_tanh_conv1d])
         # Branches out to skip unit and residual output.
         l_skip_connection = Conv1D(skip_channels, 1)(l_mul)
