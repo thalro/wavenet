@@ -86,9 +86,12 @@ def build_wavenet_model(num_stacks, dilation_channels=32,
     l_input = Input(batch_shape=(None, receptive_field_size, 1))
     
     if not scalar_input:
-        l_input = MuLawOneHot(input_length =  receptive_field_size,mu = 256)(l_input)
+        one_hot_input = MuLawOneHot(input_length =  receptive_field_size,mu = 256)(l_input)
 
-    l_stack_conv1d = Conv1D(residual_channels, kernel_size, padding="causal")(l_input)
+        l_stack_conv1d = Conv1D(residual_channels, kernel_size, padding="causal")(one_hot_input)
+    else:
+        l_stack_conv1d = Conv1D(residual_channels, kernel_size, padding="causal")(l_input)
+    
     l_skip_connections = []
     for i in range(num_stacks*num_layers_per_stack+num_stacks-1):
         dilution = 2 ** ((i + 1)%(num_layers_per_stack+1))
