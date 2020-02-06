@@ -83,7 +83,7 @@ def build_wavenet_model(num_stacks, dilation_channels=32,
     kernel_size = 2
     receptive_field_size = num_stacks*2**(num_layers_per_stack+1)
     
-    l_input = Input(batch_shape=(None, receptive_field_size))
+    l_input = Input(batch_shape=(None, receptive_field_size, 1))
     if not scalar_input:
         l_input = MuLawOneHot(input_length =  receptive_field_size,mu = 256)(l_input)
     l_stack_conv1d = Conv1D(residual_channels, kernel_size, padding="causal")(l_input)
