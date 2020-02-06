@@ -1,6 +1,26 @@
-from tensorflow.keras.layers import Activation, Add, Conv1D, Dense, Flatten, Input, Multiply
+from tensorflow.keras.layers import Activation, Add, Conv1D, Dense, Flatten, Input, Multiply,Layer
 from tensorflow.keras.models import Model
+from tensorflow.keras import backend as K
 
+
+
+class MuLawOneHot(Layer):
+    def __init__(self, input_length,mu=256, **kwargs):
+        self.input_length = input_length
+        self.mu = int(mu)
+        super(MyLayer, self).__init__(**kwargs)
+
+    def build(self, input_shape):
+        
+        super(MyLayer, self).build(input_shape)  # Be sure to call this at the end
+
+    def call(self, x):
+        x_int = K.cast((x + 1)/2.*self.mu,'int32') 
+        
+        return K.one_hot(x_int,self.mu)
+
+    def compute_output_shape(self, input_shape):
+        return (input_shape[0], self.input_length,self.mu)
 
 def WaveNetResidualConv1D(dilation_channels,skip_channels,residual_channels, kernel_size, dilation_rate):
     """ Function that creates a residual block for the WaveNet with gated
@@ -41,7 +61,7 @@ def build_wavenet_model(num_stacks, dilation_channels=32,
                         skip_channels=64,
                         residual_channels=32,
                         num_layers_per_stack = 9,
-                        input_channels = 1):
+                        scalar_input = False):
     """ Returns an implementation of WaveNet, as described in Section 2
         of the paper [1].
 
@@ -62,7 +82,10 @@ def build_wavenet_model(num_stacks, dilation_channels=32,
     """
     kernel_size = 2
     receptive_field_size = num_stacks*2**(num_layers_per_stack+1)
-    l_input = Input(batch_shape=(None, receptive_field_size, input_channels))
+    if scalar_input:
+    	l_input = Input(batch_shape=(None, receptive_field_size, 1))
+    else:
+        l_input = MuLawOneHot(input_length =  receptive_field_size,mu = 256)
     l_stack_conv1d = Conv1D(residual_channels, kernel_size, padding="causal")(l_input)
     l_skip_connections = []
     for i in range(num_stacks*num_layers_per_stack+num_stacks-1):
