@@ -15,8 +15,8 @@ class MuLawOneHot(Layer):
         super(MuLawOneHot, self).build(input_shape)  # Be sure to call this at the end
 
     def call(self, x):
-        x_int = K.cast((x + 1)/2.*self.mu,'int32')[:,:,0] 
-        
+        x_int = K.cast((x + 1)/2.*self.mu,'int32')
+        x_int = K.squeeze(x_int,axis=2)
         return K.one_hot(x_int,self.mu)
 
     def compute_output_shape(self, input_shape):
@@ -84,8 +84,10 @@ def build_wavenet_model(num_stacks, dilation_channels=32,
     receptive_field_size = num_stacks*2**(num_layers_per_stack+1)
     
     l_input = Input(batch_shape=(None, receptive_field_size, 1))
+    
     if not scalar_input:
         l_input = MuLawOneHot(input_length =  receptive_field_size,mu = 256)(l_input)
+
     l_stack_conv1d = Conv1D(residual_channels, kernel_size, padding="causal")(l_input)
     l_skip_connections = []
     for i in range(num_stacks*num_layers_per_stack+num_stacks-1):
