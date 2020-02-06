@@ -15,7 +15,7 @@ class MuLawOneHot(Layer):
         super(MuLawOneHot, self).build(input_shape)  # Be sure to call this at the end
 
     def call(self, x):
-        x_int = K.cast((x + 1)/2.*self.mu,'int32') 
+        x_int = K.cast((x + 1)/2.*self.mu,'int32')[:,:,0] 
         
         return K.one_hot(x_int,self.mu)
 
