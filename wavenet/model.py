@@ -8,11 +8,11 @@ class MuLawOneHot(Layer):
     def __init__(self, input_length,mu=256, **kwargs):
         self.input_length = input_length
         self.mu = int(mu)
-        super(MyLayer, self).__init__(**kwargs)
+        super(MuLawOneHot, self).__init__(**kwargs)
 
     def build(self, input_shape):
         
-        super(MyLayer, self).build(input_shape)  # Be sure to call this at the end
+        super(MuLawOneHot, self).build(input_shape)  # Be sure to call this at the end
 
     def call(self, x):
         x_int = K.cast((x + 1)/2.*self.mu,'int32') 
