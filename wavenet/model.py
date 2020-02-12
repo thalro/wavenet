@@ -57,7 +57,9 @@ def WaveNetResidualConv1D(dilation_channels,skip_channels,residual_channels, ker
     return build_residual_block
 
 
-def build_wavenet_model(num_stacks, dilation_channels=32,
+def build_wavenet_model(input_length,
+                        num_stacks=1, 
+                        dilation_channels=32,
                         skip_channels=64,
                         residual_channels=32,
                         num_layers_per_stack = 9,
@@ -83,7 +85,7 @@ def build_wavenet_model(num_stacks, dilation_channels=32,
     kernel_size = 2
     receptive_field_size = num_stacks*2**(num_layers_per_stack+1)
     
-    l_input = Input(batch_shape=(None, receptive_field_size, 1))
+    l_input = Input(batch_shape=(None, input_length, 1))
     
     if not scalar_input:
         one_hot_input = MuLawOneHot(input_length =  receptive_field_size,mu = 256)(l_input)
